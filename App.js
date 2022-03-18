@@ -1,15 +1,22 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   Text,
   View,
   StyleSheet,
   TouchableOpacity,
   TextInput,
+  Keyboard,
 } from 'react-native';
 
 import Store from './src/store/Store';
 import publicIP from 'react-native-public-ip';
 import {observer} from 'mobx-react';
+
+// useEffect(() => {
+//   const showSubscription = Keyboard.addListener('', () => {
+//     setKeyboardStatus('Keyboard Shown');
+//   });
+// });
 
 const getCity = IP => {
   var url =
@@ -81,6 +88,12 @@ export default App = observer(() => {
       // 'Unable to get IP address.'
     });
 
+  const handleKeyPress = ({nativeEvent: {key: keyValue}}) => {
+    if (!(keyValue.replace(/[^a-zA-Zа-яА-Я\s]/g, '') === keyValue)) {
+      setText(text.slice(0, -1));
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>
@@ -96,6 +109,7 @@ export default App = observer(() => {
           onChangeText={setText}
           value={text}
           autoFocus={true}
+          onKeyPress={handleKeyPress}
         />
         <TouchableOpacity
           style={styles.button}
