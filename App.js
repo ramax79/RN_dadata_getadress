@@ -1,22 +1,15 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import {
   Text,
   View,
   StyleSheet,
   TouchableOpacity,
   TextInput,
-  Keyboard,
 } from 'react-native';
 
 import Store from './src/store/Store';
 import publicIP from 'react-native-public-ip';
 import {observer} from 'mobx-react';
-
-// useEffect(() => {
-//   const showSubscription = Keyboard.addListener('', () => {
-//     setKeyboardStatus('Keyboard Shown');
-//   });
-// });
 
 const getCity = IP => {
   var url =
