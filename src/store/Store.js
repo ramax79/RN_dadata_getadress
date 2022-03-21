@@ -3,6 +3,7 @@ import {makeAutoObservable} from 'mobx';
 class Store {
   ip = '';
   city = '';
+  textInput = 'Ленина';
   spisokAdress = [];
   constructor() {
     makeAutoObservable(this);
@@ -15,6 +16,9 @@ class Store {
   }
   setSpisokAdress(data) {
     this.spisokAdress = data;
+  }
+  setTextInput(data) {
+    this.textInput = data;
   }
 }
 

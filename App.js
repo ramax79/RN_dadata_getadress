@@ -1,15 +1,20 @@
-import React, {useState} from 'react';
+import React from 'react';
 import {
   Text,
   View,
-  StyleSheet,
   TouchableOpacity,
-  TextInput,
+  FlatList,
+  Keyboard,
+  StatusBar,
+  Alert,
 } from 'react-native';
+import {SearchBar} from 'react-native-elements';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 import Store from './src/store/Store';
 import publicIP from 'react-native-public-ip';
 import {observer} from 'mobx-react';
+import {STYLES} from './src/config';
 
 const getCity = IP => {
   var url =
@@ -62,14 +67,17 @@ const getAdress = (storeCity, StoreAdress) => {
   fetch(url, options)
     .then(response => response.json())
     .then(result => {
-      const data = result.suggestions.map(t => t.value);
-      Store.setSpisokAdress(data);
+      Store.setSpisokAdress(result.suggestions);
+      // Keyboard.dismiss();
     })
     .catch(error => console.log('error', error));
 };
 
 export default App = observer(() => {
-  const [text, setText] = useState('Ленина');
+  const onSubmitted = () => {
+    getAdress(Store.city, Store.textInput);
+    Keyboard.dismiss();
+  };
 
   publicIP()
     .then(ip => {
@@ -81,75 +89,54 @@ export default App = observer(() => {
       // 'Unable to get IP address.'
     });
 
-  const handleKeyPress = ({nativeEvent: {key: keyValue}}) => {
-    if (!(keyValue.replace(/[^a-zA-Zа-яА-Я\s]/g, '') === keyValue)) {
-      setText(text.slice(0, -1));
-    }
-  };
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>
-        Проверка практических знаний для соискателей
-      </Text>
-      <View style={styles.ip}>
-        <Text>IP = {Store.ip}</Text>
-        <Text>Город = {Store.city}</Text>
+    <>
+      <StatusBar hidden />
+      <View style={STYLES.container}>
+        <Text style={STYLES.header}>
+          Проверка практических знаний для соискателей
+        </Text>
+        <View style={STYLES.ip}>
+          <Text style={STYLES.title}>IP = {Store.ip}</Text>
+          <Text style={STYLES.title}>Город = {Store.city}</Text>
+        </View>
+
+        <View style={STYLES.search}>
+          <SearchBar
+            value={Store.textInput}
+            placeholder="Input adress for search..."
+            containerStyle={STYLES.input}
+            inputStyle={{color: '#fff'}}
+            searchIcon={false}
+            onSubmitEditing={() => onSubmitted()}
+            onChangeText={keyValue => {
+              if (!keyValue.match(/[^a-zA-Zа-яА-Я\s]/g)) {
+                Store.setTextInput(keyValue);
+                //     //  onSubmitted() // частичный поиск при написании названия улицы
+              }
+            }}
+          />
+          <TouchableOpacity style={STYLES.button} onPress={() => onSubmitted()}>
+            <Icon name="search" size={30} color="#fff" />
+          </TouchableOpacity>
+        </View>
+        <View style={{marginTop: 10, paddingBottom: 10}}>
+          <FlatList
+            keyExtractor={(item, index) => index.toString()}
+            data={Store.spisokAdress}
+            renderItem={({item}) => (
+              <View style={STYLES.item}>
+                <TouchableOpacity
+                  onPress={() => {
+                    Alert.alert('Адрес', item.value);
+                  }}>
+                  <Text style={STYLES.title}>{item.value}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          />
+        </View>
       </View>
-      <View style={styles.ip}>
-        <TextInput
-          style={styles.input}
-          onChangeText={setText}
-          value={text}
-          autoFocus={true}
-          onKeyPress={handleKeyPress}
-        />
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => getAdress(Store.city, text)}>
-          <Text style={{textAlign: 'center'}}>Search</Text>
-        </TouchableOpacity>
-      </View>
-      <View>
-        {Store.spisokAdress.map((item, index) => {
-          return (
-            <View key={index}>
-              <Text>{item}</Text>
-            </View>
-          );
-        })}
-      </View>
-    </View>
+    </>
   );
-});
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 10,
-  },
-  header: {
-    textAlign: 'center',
-    fontSize: 13,
-    fontWeight: 'bold',
-    padding: 10,
-  },
-  input: {
-    height: 40,
-    borderWidth: 1,
-    borderRadius: 10,
-    width: '70%',
-    paddingLeft: 10,
-  },
-  ip: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 10,
-  },
-  button: {
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderRadius: 10,
-    width: '23%',
-    height: 40,
-  },
 });
