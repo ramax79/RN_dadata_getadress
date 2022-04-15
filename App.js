@@ -5,21 +5,24 @@ import {
   TouchableOpacity,
   FlatList,
   Keyboard,
-  StatusBar,
   Alert,
+  TextInput,
 } from 'react-native';
-import {SearchBar} from 'react-native-elements';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 import Store from './src/store/Store';
 import publicIP from 'react-native-public-ip';
 import {observer} from 'mobx-react';
-import {STYLES} from './src/config';
+import {STYLES, theme} from './src/config';
+import Config from 'react-native-config';
+
+const url = Config.url; 
+const urlAdress = Config.urlAdress;
+const token = Config.token; 
 
 const getCity = IP => {
-  var url =
-    'https://suggestions.dadata.ru/suggestions/api/4_1/rs/iplocate/address?ip=';
-  var token = 'b492fda7c1c7338172c3c34e934ef8049c1b3f33';
+  //https://dadata.ru/api/iplocate/#usage
+
   var query = IP;
 
   var options = {
@@ -41,9 +44,7 @@ const getCity = IP => {
 };
 
 const getAdress = (storeCity, StoreAdress) => {
-  var url =
-    'https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/address';
-  var token = 'b492fda7c1c7338172c3c34e934ef8049c1b3f33';
+  //https://dadata.ru/api/suggest/address/
 
   var options = {
     method: 'POST',
@@ -64,10 +65,10 @@ const getAdress = (storeCity, StoreAdress) => {
     }),
   };
 
-  fetch(url, options)
+  fetch(urlAdress, options)
     .then(response => response.json())
     .then(result => {
-      Store.setSpisokAdress(result.suggestions);
+      Store.setSpisokAdress(result.suggestions);      
       // Keyboard.dismiss();
     })
     .catch(error => console.log('error', error));
@@ -90,53 +91,57 @@ export default App = observer(() => {
     });
 
   return (
-    <>
-      <StatusBar hidden />
-      <View style={STYLES.container}>
-        <Text style={STYLES.header}>
-          Проверка практических знаний для соискателей
-        </Text>
-        <View style={STYLES.ip}>
+    <View style={STYLES.container}>
+      <Text style={STYLES.header}>Поиск адреса в городе</Text>
+      <View style={STYLES.ip}>
+        <View style={{flexDirection: 'row', justifyContent: 'flex-start'}}>
+          <Icon name="public" size={20} color={theme.colorIcon} />
           <Text style={STYLES.title}>IP = {Store.ip}</Text>
+        </View>
+        <View style={{flexDirection: 'row', justifyContent: 'flex-start'}}>
+          <Icon name="room" size={20} color={theme.colorIcon} />
           <Text style={STYLES.title}>Город = {Store.city}</Text>
         </View>
-
-        <View style={STYLES.search}>
-          <SearchBar
-            value={Store.textInput}
-            placeholder="Input adress for search..."
-            containerStyle={STYLES.input}
-            inputStyle={{color: '#fff'}}
-            searchIcon={false}
-            onSubmitEditing={() => onSubmitted()}
-            onChangeText={keyValue => {
-              if (!keyValue.match(/[^a-zA-Zа-яА-Я\s]/g)) {
-                Store.setTextInput(keyValue);
-                //     //  onSubmitted() // частичный поиск при написании названия улицы
-              }
-            }}
-          />
-          <TouchableOpacity style={STYLES.button} onPress={() => onSubmitted()}>
-            <Icon name="search" size={30} color="#fff" />
-          </TouchableOpacity>
-        </View>
-        <View style={{marginTop: 10, paddingBottom: 10}}>
-          <FlatList
-            keyExtractor={(item, index) => index.toString()}
-            data={Store.spisokAdress}
-            renderItem={({item}) => (
-              <View style={STYLES.item}>
-                <TouchableOpacity
-                  onPress={() => {
-                    Alert.alert('Адрес', item.value);
-                  }}>
-                  <Text style={STYLES.title}>{item.value}</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          />
-        </View>
       </View>
-    </>
+
+      <View style={STYLES.search}>
+        <TextInput
+          style={STYLES.textinput}
+          value={Store.textInput}
+          placeholder="Input adress for search..."
+          onSubmitEditing={() => onSubmitted()}
+          onChangeText={keyValue => {
+            if (!keyValue.match(/[^a-zA-Zа-яА-Я\s]/g)) {
+              Store.setTextInput(keyValue);
+              //     //  onSubmitted() // частичный поиск при написании названия улицы
+            }
+          }}
+        />
+        <TouchableOpacity style={STYLES.button} onPress={() => onSubmitted()}>
+          <Icon name="search" size={30} color={theme.colorIcon} />
+        </TouchableOpacity>
+      </View>
+      <View style={{flex: 1, marginTop: 10, paddingBottom: 10}}>
+        <FlatList
+          keyExtractor={(item, index) => index.toString()}
+          data={Store.spisokAdress}
+          renderItem={({item}) => (
+            <View style={STYLES.item}>
+              <TouchableOpacity
+                onPress={() => {
+                  Alert.alert('Адрес', item.value);
+                }}>
+                <Text
+                  style={STYLES.text}
+                  adjustsFontSizeToFit={true}
+                  numberOfLines={1}>
+                  {item.value}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        />
+      </View>
+    </View>
   );
 });
